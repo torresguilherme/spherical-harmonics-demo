@@ -1,0 +1,4 @@
+PyOpenGL
+pyrr
+glfw
+numpy
