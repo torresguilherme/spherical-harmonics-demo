@@ -4,6 +4,7 @@ from OpenGL.GLU import *
 import pyrr
 import glfw
 import numpy
+import time
 
 class Teapot():
     def __init__(self):
@@ -106,10 +107,10 @@ def main():
     if not glfw.init():
         return
 
-    glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 3)
+    glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 4)
     glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 3)
     glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
-    window = glfw.create_window(800, 600, 'SH lighting', None, None)
+    window = glfw.create_window(1280, 960, 'SH lighting', None, None)
     if not window:
         glfw.terminate()
         return
@@ -129,15 +130,19 @@ def main():
         fragment_shader = f.read()
     
     shader = shaders.compileProgram(shaders.compileShader(vertex_shader, GL_VERTEX_SHADER), shaders.compileShader(fragment_shader, GL_FRAGMENT_SHADER))
-    shape = Shape(Material(shader, .0, .5, .5, 0.05)) # valores default iniciais
+    shape = Shape(Material(shader, .0, 1.0, 1.0, 0.05)) # valores default iniciais
     #key_flags = [False, False]
     
+    old_time = time.time()
     while not glfw.window_should_close(window):
         glfw.poll_events()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         #get_input(window, shape, key_flags)
         shape.render()
         glfw.swap_buffers(window)
+        new_time = time.time() - old_time
+        print(1/new_time)
+        old_time = time.time()
     glfw.terminate()
     
 if __name__ == '__main__':

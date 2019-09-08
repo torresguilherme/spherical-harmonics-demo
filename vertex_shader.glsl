@@ -1,4 +1,4 @@
-#version 330
+#version 430
 uniform mat4 model_transform;
 uniform mat4 camera;
 uniform mat4 projection;
@@ -14,6 +14,7 @@ layout (location = 1) in vec3 vertex_normal;
 
 out vec3 view_position;
 out vec3 pixel_position;
+out vec3 world_position;
 out vec3 camera_position;
 out vec3 normal;
 
@@ -22,6 +23,7 @@ void main()
     gl_Position = projection * camera * model_transform * vec4(position, 1.0);
     view_position = gl_Position.xyz;
     pixel_position = position;
+    world_position = (model_transform * vec4(position, 1.0)).xyz;
     camera_position = camera_pos_input;
     normal = normalize(vertex_normal);
 }
