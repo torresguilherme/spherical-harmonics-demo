@@ -184,9 +184,9 @@ void main()
         float dot_light = max(dot(sample_ray, interpolated_normal), 0);
         for(int j = 0; j < 9; j++)
         {
-            float red_value = dot_light * light[0][i];
-            float green_value = dot_light * light[1][i];
-            float blue_value = dot_light * light[2][i];
+            float red_value = dot_light * light[0][j];
+            float green_value = dot_light * light[1][j];
+            float blue_value = dot_light * light[2][j];
             red_sum += albedo_r * red_value;
             green_sum += albedo_g * green_value;
             blue_sum += albedo_b * blue_value;

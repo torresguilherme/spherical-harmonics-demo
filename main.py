@@ -140,7 +140,7 @@ def main():
         fragment_shader = f.read()
     
     shader = shaders.compileProgram(shaders.compileShader(vertex_shader, GL_VERTEX_SHADER), shaders.compileShader(fragment_shader, GL_FRAGMENT_SHADER))
-    shape = Shape(Material(shader, .0, 1.0, 1.0, 0.05)) # valores default iniciais
+    shape = Shape(Material(shader, 1.0, 1.0, 1.0, 0.05)) # valores default iniciais
     #key_flags = [False, False]
     
     old_time = time.time()
