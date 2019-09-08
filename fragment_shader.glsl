@@ -4,6 +4,8 @@ uniform float albedo_g;
 uniform float albedo_b;
 uniform float ks;
 
+uniform sampler2D noise_texture;
+
 in vec3 view_position;
 in vec3 pixel_position;
 in vec3 world_position;
@@ -168,12 +170,16 @@ void main()
     float green_sum = 0.0;
     float blue_sum = 0.0;
 
-    float num_samples = 50;
+    float num_samples = 100;
     for(int i = 0; i < num_samples; i++)
     {
-        vec3 sample_ray = normalize(vec3(random_ray(vec2(interpolated_normal.x / interpolated_normal.z * i, interpolated_normal.y / i * interpolated_normal.z)),
-            random_ray(vec2(interpolated_normal.x / i, interpolated_normal.z / i)),
-            random_ray(vec2(interpolated_normal.y / i, interpolated_normal.z / i))));
+        vec3 sample_ray = normalize(
+            vec3(
+                texture(noise_texture, interpolated_normal.xy * i).r,
+                texture(noise_texture, interpolated_normal.xy * i).r,
+                texture(noise_texture, interpolated_normal.xy * i).r
+            )
+        );
         // to do: oclusao
         float dot_light = max(dot(sample_ray, interpolated_normal), 0);
         for(int j = 0; j < 9; j++)

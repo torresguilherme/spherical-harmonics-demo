@@ -40,12 +40,22 @@ class Teapot():
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.nbo)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, len(self.vertex_normals) * 4, self.vertex_normals, GL_STATIC_DRAW)
 
-        glBindVertexArray(0)
+        # generate noise texture
+        self.noise_texture = numpy.random.rand(16, 16)
+        self.noise_texture_buffer = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, self.noise_texture_buffer)
+        glPixelStorei(GL_UNPACK_ALIGNMENT,1)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 16, 16, 0, GL_RED, GL_FLOAT, self.noise_texture)
 
-        print(self.vbo, self.ebo, self.nbo)
+        glBindVertexArray(0)
 
     def render(self, shader):
         glBindVertexArray(self.vao)
+
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, self.noise_texture_buffer)
 
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
         position = glGetAttribLocation(shader, 'position')
@@ -65,6 +75,7 @@ class Material:
         self.shader = shader
         self.albedo = [albedo_r, albedo_g, albedo_b]
         self.specular_constant = specular_constant
+
     def set_up_rendering(self):
         glUseProgram(self.shader)
         
@@ -78,7 +89,6 @@ class Material:
         
         ks = glGetUniformLocation(self.shader, 'ks')
         glUniform1f(ks, self.specular_constant)
-
 
 class Shape:
     def __init__(self, material):
