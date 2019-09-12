@@ -171,17 +171,23 @@ void main()
     float blue_sum = 0.0;
 
     float num_samples = 100;
-    for(int i = 0; i < num_samples; i++)
+    for(int i = 0; i < num_samples;)
     {
         vec3 sample_ray = normalize(
             vec3(
                 texture(noise_texture, interpolated_normal.xy * i).r,
-                texture(noise_texture, interpolated_normal.xy * i).r,
-                texture(noise_texture, interpolated_normal.xy * i).r
+                texture(noise_texture, interpolated_normal.xz * i).r,
+                texture(noise_texture, interpolated_normal.yz * i).r
             )
         );
         // to do: oclusao
-        float dot_light = max(dot(sample_ray, interpolated_normal), 0);
+        float dot_light = 0;
+        float dot_light_candidate = dot(interpolated_normal, sample_ray);
+        if(dot_light_candidate > dot_light)
+        {
+            dot_light = dot_light_candidate;
+            i += 1;
+        }
         for(int j = 0; j < 9; j++)
         {
             float red_value = dot_light * light[0][j];

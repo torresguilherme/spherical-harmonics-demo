@@ -5,6 +5,10 @@ import pyrr
 import glfw
 import numpy
 import time
+from PIL import Image
+
+width = 1920
+height = 1080
 
 class Teapot():
     def __init__(self):
@@ -99,7 +103,7 @@ class Shape:
         
         #transformation uniforms
         model_transform = pyrr.Matrix44.identity()
-        perspective_transform = pyrr.Matrix44.perspective_projection(45, 4/3, 0.01, 100)
+        perspective_transform = pyrr.Matrix44.perspective_projection(45, width/height, 0.01, 100)
         camera_transform = pyrr.Matrix44.look_at((2, 2, 2), (0, 0, 0), (0, 1, 0))
         
         mt_loc = glGetUniformLocation(self.material.shader, 'model_transform')
@@ -117,10 +121,11 @@ def main():
     if not glfw.init():
         return
 
+    glfw.window_hint(glfw.VISIBLE, False)
     glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 4)
     glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 3)
     glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
-    window = glfw.create_window(1280, 960, 'SH lighting', None, None)
+    window = glfw.create_window(width, height, 'SH lighting', None, None)
     if not window:
         glfw.terminate()
         return
@@ -143,16 +148,18 @@ def main():
     shape = Shape(Material(shader, 1.0, 1.0, 1.0, 0.05)) # valores default iniciais
     #key_flags = [False, False]
     
-    old_time = time.time()
-    while not glfw.window_should_close(window):
-        glfw.poll_events()
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        #get_input(window, shape, key_flags)
-        shape.render()
-        glfw.swap_buffers(window)
-        new_time = time.time() - old_time
-        print(1/new_time)
-        old_time = time.time()
+    print("rendering...")
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    #get_input(window, shape, key_flags)
+    shape.render()
+    print("render complete.")
+    print("reading buffer and preparing image...")
+    image = Image.frombytes("RGB", (width, height), glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE))
+    image = image.transpose(Image.FLIP_TOP_BOTTOM)
+    print("image is ready. saving image...")
+    image.save("output.png")
+    print("image saved. exiting.")
+
     glfw.terminate()
     
 if __name__ == '__main__':

@@ -2,3 +2,4 @@ PyOpenGL
 pyrr
 glfw
 numpy
+pillow
