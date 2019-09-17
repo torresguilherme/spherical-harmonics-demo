@@ -77,6 +77,21 @@ float spherical_harmonic(int l, int m, float theta, float phi)
     else return sqrt2*K(l,-m)*sin(-m*phi)*P(l,-m,cos(theta));
 }
 
+float[9] sh_1d(float theta, float phi)
+{
+    float[9] ret;
+    for(int l = 0; l < 3; l++)
+    {
+        for(int m = -l; m <= l; m++)
+        {
+            int i = l * (l + 1) + m;
+            ret[i] = spherical_harmonic(l, m, theta, phi);
+        }
+    }
+
+    return ret;
+}
+
 vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
 vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
 
@@ -157,12 +172,16 @@ float random_ray(vec2 st) {
 
 void main()
 {
-    float light[3][9] = 
-    {
-        {0.39925, - 0.21075, 0.28687, 0.28277, - 0.31530, - 0.00040, 0.13159, 0.00098, - 0.09359},
-        {0.39925, - 0.21075, 0.28687, 0.28277, - 0.31530, - 0.00040, 0.13159, 0.00098, - 0.09359},
-        {0.39925, - 0.21075, 0.28687, 0.28277, - 0.31530, - 0.00040, 0.13159, 0.00098, - 0.09359}
-    };
+    float light[9][3] = 
+        {{ 0.51430386,  0.54888046,  0.5371795},
+        { 0.02020477,  0.04077435,  0.04477757},
+        { 0.1882299,   0.18800014,  0.15927704},
+        { 0.36236936,  0.32709065,  0.26591793},
+        {-0.11514409, -0.11094531, -0.09342398},
+        { 0.04030649,  0.03363197,  0.02538065},
+        { 0.11236399,  0.06745936,  0.03496435},
+        {-0.18766412, -0.16153952, -0.12471137},
+        { 0.06206184,  0.07131685,  0.07012468}};
     vec3 interpolated_normal = normalize(normal);
 
     // sample rays
@@ -170,16 +189,20 @@ void main()
     float green_sum = 0.0;
     float blue_sum = 0.0;
 
-    float num_samples = 100;
+    float num_samples = 1000;
+    int ray_count = 0;
     for(int i = 0; i < num_samples;)
     {
-        vec3 sample_ray = normalize(
-            vec3(
-                texture(noise_texture, interpolated_normal.xy * i).r,
-                texture(noise_texture, interpolated_normal.xz * i).r,
-                texture(noise_texture, interpolated_normal.yz * i).r
-            )
-        );
+        float a = texture(noise_texture, interpolated_normal.xy * ray_count).r;
+        float b = texture(noise_texture, interpolated_normal.yz * ray_count).r;
+        float theta = 2.0 * acos(sqrt(1.0-a));
+        float phi = 2.0 * 3.141 * b;
+        float x = sin(theta) * cos(phi);
+        float y = sin(theta) * sin(phi);
+        float z = cos(theta);
+        vec3 sample_ray = vec3(x, y, z);
+
+        ray_count += 1;
         // to do: oclusao
         float dot_light = 0;
         float dot_light_candidate = dot(interpolated_normal, sample_ray);
@@ -188,20 +211,21 @@ void main()
             dot_light = dot_light_candidate;
             i += 1;
         }
+        float sh[9] = sh_1d(theta, phi);
         for(int j = 0; j < 9; j++)
         {
-            float red_value = dot_light * light[0][j];
-            float green_value = dot_light * light[1][j];
-            float blue_value = dot_light * light[2][j];
+            float red_value = dot_light * light[j][0] * sh[j];
+            float green_value = dot_light * light[j][1] * sh[j];
+            float blue_value = dot_light * light[j][2] * sh[j];
             red_sum += albedo_r * red_value;
             green_sum += albedo_g * green_value;
             blue_sum += albedo_b * blue_value;
         }
     }
 
-    float red_diffuse = red_sum / num_samples;
-    float green_diffuse = green_sum / num_samples;
-    float blue_diffuse = blue_sum / num_samples;
+    float red_diffuse = red_sum * (4.0 / 3.141) / num_samples;
+    float green_diffuse = green_sum * (4.0 / 3.141) / num_samples;
+    float blue_diffuse = blue_sum * (4.0 / 3.141) / num_samples;
 
     frag_color = vec4(red_diffuse, green_diffuse, blue_diffuse, 1.0);
 }

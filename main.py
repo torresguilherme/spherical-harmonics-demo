@@ -1,6 +1,5 @@
 from OpenGL.GL import *
 from OpenGL.GL import shaders
-from OpenGL.GLU import *
 import pyrr
 import glfw
 import numpy
@@ -45,13 +44,13 @@ class Teapot():
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, len(self.vertex_normals) * 4, self.vertex_normals, GL_STATIC_DRAW)
 
         # generate noise texture
-        self.noise_texture = numpy.random.rand(16, 16)
+        self.noise_texture = numpy.random.rand(256, 256)
         self.noise_texture_buffer = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, self.noise_texture_buffer)
         glPixelStorei(GL_UNPACK_ALIGNMENT,1)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 16, 16, 0, GL_RED, GL_FLOAT, self.noise_texture)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 256, 256, 0, GL_RED, GL_FLOAT, self.noise_texture)
 
         glBindVertexArray(0)
 
@@ -104,7 +103,7 @@ class Shape:
         #transformation uniforms
         model_transform = pyrr.Matrix44.identity()
         perspective_transform = pyrr.Matrix44.perspective_projection(45, width/height, 0.01, 100)
-        camera_transform = pyrr.Matrix44.look_at((2, 2, 2), (0, 0, 0), (0, 1, 0))
+        camera_transform = pyrr.Matrix44.look_at((0, 1, 3), (0, 0, 0), (0, 1, 0))
         
         mt_loc = glGetUniformLocation(self.material.shader, 'model_transform')
         glUniformMatrix4fv(mt_loc, 1, GL_FALSE, model_transform)
@@ -113,7 +112,7 @@ class Shape:
         cam_loc = glGetUniformLocation(self.material.shader, 'camera')
         glUniformMatrix4fv(cam_loc, 1, GL_FALSE, camera_transform)
         cam_pos_loc = glGetUniformLocation(self.material.shader, 'camera_pos_input')
-        glUniform3f(cam_pos_loc, 2, 2, 2)
+        glUniform3f(cam_pos_loc, 0, 1, 3)
 
         self.teapot.render(self.material.shader)
 
@@ -152,6 +151,7 @@ def main():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     #get_input(window, shape, key_flags)
     shape.render()
+    glFlush()
     print("render complete.")
     print("reading buffer and preparing image...")
     image = Image.frombytes("RGB", (width, height), glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE))
