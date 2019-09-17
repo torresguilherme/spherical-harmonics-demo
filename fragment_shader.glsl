@@ -3,6 +3,9 @@ uniform float albedo_r;
 uniform float albedo_g;
 uniform float albedo_b;
 uniform float ks;
+uniform float light_r[9];
+uniform float light_g[9];
+uniform float light_b[9];
 
 uniform sampler2D noise_texture;
 
@@ -37,7 +40,7 @@ float factorial(int n)
 
 float K(int l, int m)
 {
-    float temp = ((2.0 * l + 1.0) * factorial(l - m)) / (4.0 * 3.141 * factorial(l + m));
+    float temp = ((2.0 * l + 1.0) * factorial(l - abs(m))) / (4.0 * 3.141 * factorial(l + abs(m)));
     return sqrt(temp);
 }
 
@@ -172,24 +175,14 @@ float random_ray(vec2 st) {
 
 void main()
 {
-    float light[9][3] = 
-        {{ 0.51430386,  0.54888046,  0.5371795},
-        { 0.02020477,  0.04077435,  0.04477757},
-        { 0.1882299,   0.18800014,  0.15927704},
-        { 0.36236936,  0.32709065,  0.26591793},
-        {-0.11514409, -0.11094531, -0.09342398},
-        { 0.04030649,  0.03363197,  0.02538065},
-        { 0.11236399,  0.06745936,  0.03496435},
-        {-0.18766412, -0.16153952, -0.12471137},
-        { 0.06206184,  0.07131685,  0.07012468}};
-    vec3 interpolated_normal = normalize(normal);
+    vec3 interpolated_normal = -normalize(normal);
 
     // sample rays
     float red_sum = 0.0;
     float green_sum = 0.0;
     float blue_sum = 0.0;
 
-    float num_samples = 5000;
+    float num_samples = 10000;
     for(int i = 0; i < num_samples; i++)
     {
         float a = texture(noise_texture, interpolated_normal.xy * i).r;
@@ -202,13 +195,13 @@ void main()
         vec3 sample_ray = vec3(x, y, z);
 
         // to do: oclusao
-        float dot_light = dot(interpolated_normal, sample_ray);
+        float dot_light = max(dot(interpolated_normal, sample_ray), 0);
         float sh[9] = sh_1d(theta, phi);
         for(int j = 0; j < 9; j++)
         {
-            float red_value = dot_light * light[j][0] * sh[j];
-            float green_value = dot_light * light[j][1] * sh[j];
-            float blue_value = dot_light * light[j][2] * sh[j];
+            float red_value = dot_light * sh[j] * light_r[j];
+            float green_value = dot_light * sh[j] * light_g[j];
+            float blue_value = dot_light * sh[j] * light_b[j];
             red_sum += albedo_r * red_value;
             green_sum += albedo_g * green_value;
             blue_sum += albedo_b * blue_value;

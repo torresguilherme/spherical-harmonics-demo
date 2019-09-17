@@ -4,6 +4,9 @@ import pyrr
 import glfw
 import numpy
 import time
+import cv2
+import glob
+import sys
 from PIL import Image
 
 width = 1920
@@ -144,21 +147,28 @@ def main():
         fragment_shader = f.read()
     
     shader = shaders.compileProgram(shaders.compileShader(vertex_shader, GL_VERTEX_SHADER), shaders.compileShader(fragment_shader, GL_FRAGMENT_SHADER))
-    shape = Shape(Material(shader, 1.0, 1.0, 1.0, 0.05)) # valores default iniciais
-    #key_flags = [False, False]
+    glUseProgram(shader)
+    shape = Shape(Material(shader, 0.5, 0.4, 0.4, 0.05))
     
-    print("rendering...")
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    #get_input(window, shape, key_flags)
-    shape.render()
-    glFlush()
-    print("render complete.")
-    print("reading buffer and preparing image...")
-    image = Image.frombytes("RGB", (width, height), glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE))
-    image = image.transpose(Image.FLIP_TOP_BOTTOM)
-    print("image is ready. saving image...")
-    image.save("output.png")
-    print("image saved. exiting.")
+    i = 0
+    for lightname in glob.glob(sys.argv[1] + '*.npy'):
+        light = numpy.load(lightname).T
+        print("rendering...")
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glUniform1fv(glGetUniformLocation(shader, "light_r"), 9, light[0])
+        glUniform1fv(glGetUniformLocation(shader, "light_g"), 9, light[1])
+        glUniform1fv(glGetUniformLocation(shader, "light_b"), 9, light[2])
+        shape.render()
+        glFlush()
+        print("render complete.")
+        print("reading buffer and preparing image...")
+        image = Image.frombytes("RGB", (width, height), glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE))
+        image = image.transpose(Image.FLIP_TOP_BOTTOM)
+        print("image is ready. saving image...")
+        imagename = sys.argv[2] + ("frame%06d" % i) + "_relight3d.png"
+        image.save(imagename)
+        print("image saved as " + imagename)
+        i += 1
 
     glfw.terminate()
     
