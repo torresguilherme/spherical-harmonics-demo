@@ -189,12 +189,11 @@ void main()
     float green_sum = 0.0;
     float blue_sum = 0.0;
 
-    float num_samples = 1000;
-    int ray_count = 0;
-    for(int i = 0; i < num_samples;)
+    float num_samples = 5000;
+    for(int i = 0; i < num_samples; i++)
     {
-        float a = texture(noise_texture, interpolated_normal.xy * ray_count).r;
-        float b = texture(noise_texture, interpolated_normal.yz * ray_count).r;
+        float a = texture(noise_texture, interpolated_normal.xy * i).r;
+        float b = texture(noise_texture, interpolated_normal.yz * i).r;
         float theta = 2.0 * acos(sqrt(1.0-a));
         float phi = 2.0 * 3.141 * b;
         float x = sin(theta) * cos(phi);
@@ -202,15 +201,8 @@ void main()
         float z = cos(theta);
         vec3 sample_ray = vec3(x, y, z);
 
-        ray_count += 1;
         // to do: oclusao
-        float dot_light = 0;
-        float dot_light_candidate = dot(interpolated_normal, sample_ray);
-        if(dot_light_candidate > dot_light)
-        {
-            dot_light = dot_light_candidate;
-            i += 1;
-        }
+        float dot_light = dot(interpolated_normal, sample_ray);
         float sh[9] = sh_1d(theta, phi);
         for(int j = 0; j < 9; j++)
         {
@@ -223,9 +215,9 @@ void main()
         }
     }
 
-    float red_diffuse = red_sum * (4.0 / 3.141) / num_samples;
-    float green_diffuse = green_sum * (4.0 / 3.141) / num_samples;
-    float blue_diffuse = blue_sum * (4.0 / 3.141) / num_samples;
+    float red_diffuse = red_sum * (4.0 * 3.141) / num_samples;
+    float green_diffuse = green_sum * (4.0 * 3.141) / num_samples;
+    float blue_diffuse = blue_sum * (4.0 * 3.141) / num_samples;
 
     frag_color = vec4(red_diffuse, green_diffuse, blue_diffuse, 1.0);
 }
