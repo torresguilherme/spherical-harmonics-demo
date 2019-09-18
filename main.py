@@ -1,10 +1,13 @@
+import os
+os.environ["PYOPENGL_PLATFORM"] = "osmesa"
 from OpenGL.GL import *
 from OpenGL.GL import shaders
+from OpenGL import arrays
+from OpenGL.raw.osmesa import mesa
 import pyrr
 import glfw
 import numpy
 import time
-import cv2
 import glob
 import sys
 from PIL import Image
@@ -120,20 +123,14 @@ class Shape:
         self.teapot.render(self.material.shader)
 
 def main():
-    if not glfw.init():
-        return
+    shared_win = None
+    ctx = mesa.OSMesaCreateContext(GL_RGB, shared_win)
+    win = ctx
+    buf = arrays.GLubyteArray.zeros((height, width, 3))
+    mesap = arrays.ArrayDatatype.dataPointer(buf)
+    assert(mesa.OSMesaMakeCurrent(ctx, GLuint(mesap), GL_UNSIGNED_BYTE, width, height))
+    glViewport(0, 0, width, height)
 
-    glfw.window_hint(glfw.VISIBLE, False)
-    glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 4)
-    glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 3)
-    glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
-    window = glfw.create_window(width, height, 'SH lighting', None, None)
-    if not window:
-        glfw.terminate()
-        return
-    
-    glfw.make_context_current(window)
-    
     glClearColor(0.1, 0.1, 0.1, 1.0)
     glEnable(GL_DEPTH_TEST)
     glCullFace(GL_BACK)
@@ -169,8 +166,6 @@ def main():
         image.save(imagename)
         print("image saved as " + imagename)
         i += 1
-
-    glfw.terminate()
     
 if __name__ == '__main__':
     main()
