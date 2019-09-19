@@ -1,4 +1,4 @@
-#version 430
+#version 120
 uniform mat4 model_transform;
 uniform mat4 camera;
 uniform mat4 projection;
@@ -9,14 +9,14 @@ uniform float albedo_g;
 uniform float albedo_b;
 uniform float ks;
 
-layout (location = 0) in vec3 position;
-layout (location = 1) in vec3 vertex_normal;
+attribute vec3 position;
+attribute vec3 vertex_normal;
 
-out vec3 view_position;
-out vec3 pixel_position;
-out vec3 world_position;
-out vec3 camera_position;
-out vec3 normal;
+varying vec3 view_position;
+varying vec3 pixel_position;
+varying vec3 world_position;
+varying vec3 camera_position;
+varying vec3 normal;
 
 void main()
 {

@@ -36,9 +36,6 @@ class Teapot():
         self.vertices = numpy.array(vertices, dtype=numpy.float32).flatten()
         self.faces = numpy.array(faces, dtype=numpy.uint32).flatten()
 
-        self.vao = glGenVertexArrays(1)
-        glBindVertexArray(self.vao)
-
         self.vbo = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
         glBufferData(GL_ARRAY_BUFFER, len(self.vertices) * 4, self.vertices, GL_STATIC_DRAW)
@@ -49,6 +46,8 @@ class Teapot():
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.nbo)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, len(self.vertex_normals) * 4, self.vertex_normals, GL_STATIC_DRAW)
 
+        print(self.vbo, self.ebo, self.nbo)
+
         # generate noise texture
         self.noise_texture = numpy.random.rand(256, 256)
         self.noise_texture_buffer = glGenTextures(1)
@@ -58,23 +57,19 @@ class Teapot():
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 256, 256, 0, GL_RED, GL_FLOAT, self.noise_texture)
 
-        glBindVertexArray(0)
-
     def render(self, shader):
-        glBindVertexArray(self.vao)
-
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.noise_texture_buffer)
 
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
         position = glGetAttribLocation(shader, 'position')
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, ctypes.c_void_p(0))
-        glEnableVertexAttribArray(0)
+        glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, 0, ctypes.c_void_p(0))
+        glEnableVertexAttribArray(position)
         
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.nbo)
         vertex_normal = glGetAttribLocation(shader, 'vertex_normal')
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, ctypes.c_void_p(0))
-        glEnableVertexAttribArray(1)
+        glVertexAttribPointer(vertex_normal, 3, GL_FLOAT, GL_FALSE, 0, ctypes.c_void_p(0))
+        glEnableVertexAttribArray(vertex_normal)
         
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ebo)
         glDrawElements(GL_TRIANGLES, len(self.faces), GL_UNSIGNED_INT, None)
@@ -151,18 +146,19 @@ def main():
     for lightname in glob.glob(sys.argv[1] + '*.npy'):
         light = numpy.load(lightname).T
         print("rendering...")
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glUniform1fv(glGetUniformLocation(shader, "light_r"), 9, light[0])
         glUniform1fv(glGetUniformLocation(shader, "light_g"), 9, light[1])
         glUniform1fv(glGetUniformLocation(shader, "light_b"), 9, light[2])
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         shape.render()
         glFlush()
         print("render complete.")
         print("reading buffer and preparing image...")
+        glPixelStorei(GL_PACK_ALIGNMENT, 1)
         image = Image.frombytes("RGB", (width, height), glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE))
         image = image.transpose(Image.FLIP_TOP_BOTTOM)
         print("image is ready. saving image...")
-        imagename = sys.argv[2] + ("frame%06d" % i) + "_relight3d.png"
+        imagename = sys.argv[2] + ("frame%08d" % i) + "_relight3d.png"
         image.save(imagename)
         print("image saved as " + imagename)
         i += 1

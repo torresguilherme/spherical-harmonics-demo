@@ -1,4 +1,4 @@
-#version 430
+#version 120
 uniform float albedo_r;
 uniform float albedo_g;
 uniform float albedo_b;
@@ -9,17 +9,15 @@ uniform float light_b[9];
 
 uniform sampler2D noise_texture;
 
-in vec3 view_position;
-in vec3 pixel_position;
-in vec3 world_position;
-in vec3 camera_position;
-in vec3 normal;
-
-out vec4 frag_color;
+varying vec3 view_position;
+varying vec3 pixel_position;
+varying vec3 world_position;
+varying vec3 camera_position;
+varying vec3 normal;
 
 float nine_dot_product(float[9] v1, float[9] v2)
 {
-    float sum = 0;
+    float sum = 0.0;
     for(int i = 0; i < 9; i++)
     {
         sum += v1[i] * v2[i];
@@ -29,10 +27,10 @@ float nine_dot_product(float[9] v1, float[9] v2)
 
 float factorial(int n)
 {
-    int product = 1;
+    float product = 1.0;
     for(int i = 1; i <= n; i++)
     {
-        product *= i;
+        product *= float(i);
     }
 
     return product;
@@ -175,7 +173,7 @@ float random_ray(vec2 st) {
 
 void main()
 {
-    vec3 interpolated_normal = -normalize(normal);
+    vec3 interpolated_normal = normalize(normal);
 
     // sample rays
     float red_sum = 0.0;
@@ -185,8 +183,8 @@ void main()
     float num_samples = 10000;
     for(int i = 0; i < num_samples; i++)
     {
-        float a = texture(noise_texture, interpolated_normal.xy * i).r;
-        float b = texture(noise_texture, interpolated_normal.yz * i).r;
+        float a = texture2D(noise_texture, interpolated_normal.xy * i).r;
+        float b = texture2D(noise_texture, interpolated_normal.yz * i).r;
         float theta = 2.0 * acos(sqrt(1.0-a));
         float phi = 2.0 * 3.141 * b;
         float x = sin(theta) * cos(phi);
@@ -212,5 +210,5 @@ void main()
     float green_diffuse = green_sum * (4.0 * 3.141) / num_samples;
     float blue_diffuse = blue_sum * (4.0 * 3.141) / num_samples;
 
-    frag_color = vec4(red_diffuse, green_diffuse, blue_diffuse, 1.0);
+    gl_FragColor = vec4(red_diffuse, green_diffuse, blue_diffuse, 1.0);
 }
