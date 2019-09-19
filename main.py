@@ -118,13 +118,16 @@ class Shape:
         self.teapot.render(self.material.shader)
 
 def main():
-    shared_win = None
-    ctx = mesa.OSMesaCreateContext(GL_RGB, shared_win)
-    win = ctx
-    buf = arrays.GLubyteArray.zeros((height, width, 3))
-    mesap = arrays.ArrayDatatype.dataPointer(buf)
-    assert(mesa.OSMesaMakeCurrent(ctx, GLuint(mesap), GL_UNSIGNED_BYTE, width, height))
-    glViewport(0, 0, width, height)
+    if not glfw.init():
+        return
+    glfw.window_hint(glfw.VISIBLE, False)
+    glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 2)
+    glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 1)
+    window = glfw.create_window(width, height, 'SH lighting', None, None)
+    if not window:
+        glfw.terminate()
+        return
+    glfw.make_context_current(window)
 
     glClearColor(0.1, 0.1, 0.1, 1.0)
     glEnable(GL_DEPTH_TEST)
@@ -162,6 +165,8 @@ def main():
         image.save(imagename)
         print("image saved as " + imagename)
         i += 1
+    
+    glfw.terminate()
     
 if __name__ == '__main__':
     main()
