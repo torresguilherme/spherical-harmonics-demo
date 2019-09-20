@@ -1,9 +1,5 @@
-import os
-os.environ["PYOPENGL_PLATFORM"] = "osmesa"
 from OpenGL.GL import *
 from OpenGL.GL import shaders
-from OpenGL import arrays
-from OpenGL.raw.osmesa import mesa
 import pyrr
 import glfw
 import numpy
