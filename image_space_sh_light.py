@@ -5,10 +5,14 @@ import sys
 
 try:
     i = 0
-    for lightname in glob.glob(sys.argv[1] + '*.npy'):
+    for lightname in sorted(glob.glob(sys.argv[1] + '*.npy')):
         print("rendering image with light: " + lightname)
         light = np.load(lightname)
+        if light.shape[0] < light.shape[1]:
+            light = light.T
         transport = np.load(sys.argv[2])["T"]
+        print(light.shape)
+        print(transport.shape)
         albedo = Image.open(sys.argv[3])
         shading = np.matmul(transport, light)
         rendering = albedo * shading

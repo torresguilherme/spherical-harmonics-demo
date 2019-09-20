@@ -1,4 +1,4 @@
-#version 120
+#version 330
 uniform float albedo_r;
 uniform float albedo_g;
 uniform float albedo_b;
@@ -9,11 +9,13 @@ uniform float light_b[9];
 
 uniform sampler2D noise_texture;
 
-varying vec3 view_position;
-varying vec3 pixel_position;
-varying vec3 world_position;
-varying vec3 camera_position;
-varying vec3 normal;
+in vec3 view_position;
+in vec3 pixel_position;
+in vec3 world_position;
+in vec3 camera_position;
+in vec3 normal;
+
+out vec4 frag_color;
 
 float nine_dot_product(float[9] v1, float[9] v2)
 {
@@ -38,7 +40,7 @@ float factorial(int n)
 
 float K(int l, int m)
 {
-    float temp = ((2.0 * l + 1.0) * factorial(l - abs(m))) / (4.0 * 3.141 * factorial(l + abs(m)));
+    float temp = ((2.0 * l + 1.0) * factorial(l - m)) / (4.0 * 3.141 * factorial(l + m));
     return sqrt(temp);
 }
 
@@ -210,5 +212,5 @@ void main()
     float green_diffuse = green_sum * (4.0 * 3.141) / num_samples;
     float blue_diffuse = blue_sum * (4.0 * 3.141) / num_samples;
 
-    gl_FragColor = vec4(red_diffuse, green_diffuse, blue_diffuse, 1.0);
+    frag_color = vec4(red_diffuse, green_diffuse, blue_diffuse, 1.0);
 }

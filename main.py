@@ -32,6 +32,9 @@ class Teapot():
         self.vertices = numpy.array(vertices, dtype=numpy.float32).flatten()
         self.faces = numpy.array(faces, dtype=numpy.uint32).flatten()
 
+        self.vao = glGenVertexArrays(1)
+        glBindVertexArray(self.vao)
+
         self.vbo = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
         glBufferData(GL_ARRAY_BUFFER, len(self.vertices) * 4, self.vertices, GL_STATIC_DRAW)
@@ -53,7 +56,11 @@ class Teapot():
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 256, 256, 0, GL_RED, GL_FLOAT, self.noise_texture)
 
+        glBindVertexArray(0)
+
     def render(self, shader):
+        glBindVertexArray(self.vao)
+
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.noise_texture_buffer)
 
@@ -69,6 +76,8 @@ class Teapot():
         
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ebo)
         glDrawElements(GL_TRIANGLES, len(self.faces), GL_UNSIGNED_INT, None)
+
+        glBindVertexArray(0)
 
 class Material:
     def __init__(self, shader, albedo_r, albedo_g, albedo_b, specular_constant):
@@ -117,8 +126,9 @@ def main():
     if not glfw.init():
         return
     glfw.window_hint(glfw.VISIBLE, False)
-    glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 2)
-    glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 1)
+    glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 3)
+    glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 3)
+    glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
     window = glfw.create_window(width, height, 'SH lighting', None, None)
     if not window:
         glfw.terminate()
@@ -139,11 +149,14 @@ def main():
     
     shader = shaders.compileProgram(shaders.compileShader(vertex_shader, GL_VERTEX_SHADER), shaders.compileShader(fragment_shader, GL_FRAGMENT_SHADER))
     glUseProgram(shader)
-    shape = Shape(Material(shader, 0.5, 0.4, 0.4, 0.05))
+    shape = Shape(Material(shader, 1., 1., 1., 0.05))
     
     i = 0
-    for lightname in glob.glob(sys.argv[1] + '*.npy'):
-        light = numpy.load(lightname).T
+    for lightname in sorted(glob.glob(sys.argv[1] + '*.npy')):
+        light = numpy.load(lightname)
+        print(light.shape)
+        if light.shape[0] > light.shape[1]:
+            light = light.T
         print("rendering...")
         glUniform1fv(glGetUniformLocation(shader, "light_r"), 9, light[0])
         glUniform1fv(glGetUniformLocation(shader, "light_g"), 9, light[1])
