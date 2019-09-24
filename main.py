@@ -155,12 +155,12 @@ def main():
     for lightname in sorted(glob.glob(sys.argv[1] + '*.npy')):
         light = numpy.load(lightname)
         print(light.shape)
-        if light.shape[0] > light.shape[1]:
+        if light.shape[0] < light.shape[1]:
             light = light.T
         print("rendering...")
-        glUniform1fv(glGetUniformLocation(shader, "light_r"), 9, light[0])
-        glUniform1fv(glGetUniformLocation(shader, "light_g"), 9, light[1])
-        glUniform1fv(glGetUniformLocation(shader, "light_b"), 9, light[2])
+        glUniform1fv(glGetUniformLocation(shader, "light_r"), 9, light[:,0])
+        glUniform1fv(glGetUniformLocation(shader, "light_g"), 9, light[:,1])
+        glUniform1fv(glGetUniformLocation(shader, "light_b"), 9, light[:,2])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         shape.render()
         glFlush()
@@ -170,7 +170,7 @@ def main():
         image = Image.frombytes("RGB", (width, height), glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE))
         image = image.transpose(Image.FLIP_TOP_BOTTOM)
         print("image is ready. saving image...")
-        imagename = sys.argv[2] + ("frame%08d" % i) + "_relight3d.png"
+        imagename = sys.argv[2] + ("frame%08d" % i) + "_relight3d.jpg"
         image.save(imagename)
         print("image saved as " + imagename)
         i += 1

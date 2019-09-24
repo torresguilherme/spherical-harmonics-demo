@@ -208,9 +208,9 @@ void main()
         }
     }
 
-    float red_diffuse = red_sum * (4.0 * 3.141) / num_samples;
-    float green_diffuse = green_sum * (4.0 * 3.141) / num_samples;
-    float blue_diffuse = blue_sum * (4.0 * 3.141) / num_samples;
+    float red_diffuse = red_sum * (4.0) / num_samples;
+    float green_diffuse = green_sum * (4.0) / num_samples;
+    float blue_diffuse = blue_sum * (4.0) / num_samples;
 
     frag_color = vec4(red_diffuse, green_diffuse, blue_diffuse, 1.0);
 }
