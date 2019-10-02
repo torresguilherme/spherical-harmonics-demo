@@ -17,6 +17,8 @@ in vec3 normal;
 
 out vec4 frag_color;
 
+const float PI = 3.141;
+
 float nine_dot_product(float[9] v1, float[9] v2)
 {
     float sum = 0.0;
@@ -40,7 +42,7 @@ float factorial(int n)
 
 float K(int l, int m)
 {
-    float temp = ((2.0 * l + 1.0) * factorial(l - m)) / (4.0 * 3.141 * factorial(l + m));
+    float temp = ((2.0 * l + 1.0) * factorial(l - m)) / (4.0 * PI * factorial(l + m));
     return sqrt(temp);
 }
 
@@ -65,6 +67,29 @@ float P(int l, int m, float x)
         pmmp1 = pll;
     }
     return pll;
+}
+
+float A_i(int l)
+{
+    if(l == 0)
+    {
+        return PI;
+    }
+    else if(l == 1)
+    {
+        return 2.0 * PI / 3.0;
+    }
+    else if(l % 2 == 1)
+    {
+        return 0.0;
+    }
+    else
+    {
+        float fact1 = 2 * PI;
+        float fact2 = pow(-1.0, (l / 2) - 1) / ((l + 2) * (l - 1));
+        float fact3 = factorial(l) / (pow(2.0, l) * pow(factorial(l/2), 2));
+        return fact1 * fact2 * fact3;
+    }
 }
 
 float spherical_harmonic(int l, int m, float theta, float phi)
@@ -188,7 +213,7 @@ void main()
         float a = texture2D(noise_texture, interpolated_normal.xy * i).r;
         float b = texture2D(noise_texture, interpolated_normal.yz * i).r;
         float theta = 2.0 * acos(sqrt(1.0-a));
-        float phi = 2.0 * 3.141 * b;
+        float phi = 2.0 * PI * b;
         float x = sin(theta) * cos(phi);
         float y = sin(theta) * sin(phi);
         float z = cos(theta);
@@ -197,15 +222,17 @@ void main()
         // to do: oclusao
         float dot_light = max(dot(interpolated_normal, sample_ray), 0);
         float sh[9] = sh_1d(theta, phi);
+        vec3 env_color = vec3(0.0, 0.0, 0.0);
         for(int j = 0; j < 9; j++)
         {
-            float red_value = dot_light * sh[j] * light_r[j];
-            float green_value = dot_light * sh[j] * light_g[j];
-            float blue_value = dot_light * sh[j] * light_b[j];
-            red_sum += albedo_r * red_value;
-            green_sum += albedo_g * green_value;
-            blue_sum += albedo_b * blue_value;
+            env_color.r += light_r[j] * sh[j];
+            env_color.g += light_g[j] * sh[j];
+            env_color.b += light_b[j] * sh[j];
         }
+
+        red_sum += dot_light * albedo_r * env_color.r;
+        green_sum += dot_light * albedo_g * env_color.g;
+        blue_sum += dot_light * albedo_b * env_color.b;
     }
 
     float red_diffuse = red_sum * (4.0) / num_samples;
